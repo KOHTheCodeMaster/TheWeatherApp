@@ -1,0 +1,7 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">20dp</dimen>
+    <dimen name="activity_vertical_margin">20dp</dimen>
+    <dimen name="margin_start_weather_img_view">64dp</dimen>
+    <dimen name="margin_end_weather_img_view">64dp</dimen>
+</resources>
