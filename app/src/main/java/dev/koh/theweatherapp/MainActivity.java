@@ -38,9 +38,17 @@ public class MainActivity extends AppCompatActivity {
         temperatureTextView = findViewById(R.id.idTemperatureTextViewMA);
         weatherImageView = findViewById(R.id.idWeatherImageViewMA);
 
+        reset();
+
+    }
+
+    private void reset() {
+
+
     }
 
     public void onChangeLocationBtnClick(View view) {
+
 
 
     }
@@ -49,9 +57,14 @@ public class MainActivity extends AppCompatActivity {
 
 /*
  *  Date Created  : 29th July 2K19, 02:18 PM..!!
+ *  Last Modified : 6th October 2K19, 05:07 PM..!!
+ *
+ *  Change Log:
+ *
+ *  2nd Commit - [ChangeLocationActivity Added]
+ *  1. Designed the ChangeLocationActivity XML Layout using Constraint Layout.
  *
  *  Init Commit - [XML Layout - MainActivity]
- *
  *  1. Designed the MainActivity XML Layout from scratch using Constraint Layout.
  *
  *  Code Developed By,
