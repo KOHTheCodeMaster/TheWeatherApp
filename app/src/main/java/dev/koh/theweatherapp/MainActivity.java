@@ -24,13 +24,14 @@ import org.json.JSONObject;
 
 import cz.msebera.android.httpclient.Header;
 
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MAIN_ACTIVITY_DEBUG_01";
     private static final String API_APP_ID = "0600af5f009819e24fd8bf882383c839";
     private static final String WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather";
     private final int REQUEST_CODE = 567;
-    private final int MIN_TIME = 100;
+    private final int MIN_TIME = 100000;
     private final float MIN_DISTANCE = 1f;
 
     private LocationManager locationManager;
@@ -41,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView temperatureTextView;
     private TextView currentLocationTextView;
     private Context mainActivityContext;
+    private WeatherDataPOJO weatherDataPOJO;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,13 +131,6 @@ public class MainActivity extends AppCompatActivity {
 
         AsyncHttpClient client = new AsyncHttpClient();
         client.get(WEATHER_API_URL, requestParams, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                super.onSuccess(statusCode, headers, responseString);
-                Log.d(TAG, "onSuccess: API Request Successful.");
-                Log.d(TAG, "onSuccess: Response Status Code : " + statusCode);
-                Log.d(TAG, "onSuccess: Response: " + responseString);
-            }
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
@@ -142,16 +138,11 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "onSuccess: API Request Successful.");
                 Log.d(TAG, "onSuccess: Response Status Code : " + statusCode);
                 Log.d(TAG, "onSuccess: Response: " + response.toString());
-            }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
+                weatherDataPOJO = WeatherDataPOJO.parseJsonToWeatherData(response);
+                Log.d(TAG, "onSuccess: weatherDataPOJO : " + weatherDataPOJO);
 
-                Log.e(TAG, "onFailure: error", throwable);
-                Log.d(TAG, "onFailure: API Request Failed.");
-                Log.d(TAG, "onFailure: Response Status Code : " + statusCode);
-                Log.d(TAG, "onFailure: Response: " + responseString);
+                updateMainActivityUI();
 
             }
 
@@ -170,6 +161,17 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void updateMainActivityUI() {
+
+        temperatureTextView.setText(weatherDataPOJO.getmTemperature());
+        currentLocationTextView.setText(weatherDataPOJO.getmCity());
+
+        int resId = getResources().getIdentifier(weatherDataPOJO.getmIconName(),
+                "drawable", getPackageName());
+        weatherImageView.setImageResource(resId);
+
+    }
+
     private void checkForPermissions() {
 
         String[] permissions = {
@@ -181,8 +183,10 @@ public class MainActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED ||
                 ActivityCompat.checkSelfPermission(this, permissions[1])
                         != PackageManager.PERMISSION_GRANTED) {
+
             Log.d(TAG, "checkForPermissions: Requesting Permissions!");
             ActivityCompat.requestPermissions(this, permissions, this.REQUEST_CODE);
+
         } else {
             //  Only When acquired the access to Permissions
             //  Register the locationManager with GPS_PROVIDER, MIN_TIME MIN_DISTANCE
@@ -232,9 +236,13 @@ public class MainActivity extends AppCompatActivity {
 
 /*
  *  Date Created  : 29th July 2K19, 02:18 PM..!!
- *  Last Modified : 6th October 2K19, 07:27 PM..!!
+ *  Last Modified : 7th October 2K19, 06:44 PM..!!
  *
  *  Change Log:
+ *
+ *  4th Commit - [Updated UI]
+ *  1. Parsed Json Response from API into WeatherDataPOJO.
+ *  2. Updated MainActivity UI.
  *
  *  3rd Commit - [OpenWeatherApp API Added]
  *  1. Using AsyncHTTP Requests to OpenWeatherApp API on Location Changed.
