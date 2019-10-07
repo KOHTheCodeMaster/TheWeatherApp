@@ -2,6 +2,7 @@ package dev.koh.theweatherapp;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -12,9 +13,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -31,17 +32,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String API_APP_ID = "0600af5f009819e24fd8bf882383c839";
     private static final String WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather";
     private final int REQUEST_CODE = 567;
-    private final int MIN_TIME = 100000;
-    private final float MIN_DISTANCE = 1f;
+    private static final int MIN_TIME = 100000;
+    private static final float MIN_DISTANCE = 1f;
 
     private LocationManager locationManager;
     private LocationListener locationListener;
 
-    private Button changeLocationBtn;
     private ImageView weatherImageView;
     private TextView temperatureTextView;
     private TextView currentLocationTextView;
-    private Context mainActivityContext;
     private WeatherDataPOJO weatherDataPOJO;
 
 
@@ -65,27 +64,36 @@ public class MainActivity extends AppCompatActivity {
 
         initializeViewElements();
 
-        initializeDataMembers();
+        fetchCurrentLocationWeather();
 
         checkForPermissions();
-
-        reset();
 
     }
 
     private void initializeViewElements() {
 
         //  Initialize the View Elements
-        changeLocationBtn = findViewById(R.id.idChangeLocationBtnMA);
         currentLocationTextView = findViewById(R.id.idCurrentLocationTextViewMA);
         temperatureTextView = findViewById(R.id.idTemperatureTextViewMA);
         weatherImageView = findViewById(R.id.idWeatherImageViewMA);
 
     }
 
-    private void initializeDataMembers() {
+    private void fetchCityWeather(String newCityName) {
 
-        this.mainActivityContext = this;
+        //  Time Stamp : 7th October 2K19, 07:26 PM..!!
+
+        RequestParams requestParams = new RequestParams();
+        requestParams.put("q", newCityName);
+        requestParams.put("appid", API_APP_ID);
+
+        Log.d(TAG, "fetchCityWeather: Next API Request with City Name : " + newCityName);
+        handleAPIRequest(requestParams);
+
+    }
+
+    private void fetchCurrentLocationWeather() {
+
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         locationListener = new LocationListener() {
@@ -105,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                 requestParams.put("lon", longitude);
                 requestParams.put("appid", API_APP_ID);
 
-                generateAPIRequest(requestParams);
+                handleAPIRequest(requestParams);
 
             }
 
@@ -127,7 +135,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void generateAPIRequest(RequestParams requestParams) {
+    private void handleAPIRequest(RequestParams requestParams) {
+
+        Log.d(TAG, "generateAPIRequest: Making API Request" +
+                "\nrequestParams : " + requestParams.toString() + "\n");
 
         AsyncHttpClient client = new AsyncHttpClient();
         client.get(WEATHER_API_URL, requestParams, new JsonHttpResponseHandler() {
@@ -154,6 +165,11 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "onFailure: API Request Failed.");
                 Log.d(TAG, "onFailure: Response Status Code : " + statusCode);
                 Log.d(TAG, "onFailure: Response: " + errorResponse.toString());
+
+                if (statusCode == 404) {
+                    String msg = "Invalid City Name..!!";
+                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+                }
 
             }
 
@@ -204,6 +220,24 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "onResume: onResume callback invoked.");
 
+        Intent intent = getIntent();
+        String newCityName = intent.getStringExtra("city");
+        Log.d(TAG, "onResume: New City Name : " + newCityName);
+
+        if (newCityName != null)
+            fetchCityWeather(newCityName);
+        else
+            fetchCurrentLocationWeather();
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause: onPause callback invoked.");
+
+        if (locationManager != null)
+            locationManager.removeUpdates(locationListener);
     }
 
     @Override
@@ -214,31 +248,35 @@ public class MainActivity extends AppCompatActivity {
 
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "onRequestPermissionsResult: Permission Granted!");
-                reset();
-            } else
+            } else {
                 Log.d(TAG, "onRequestPermissionsResult: Permission Denied!");
+                String msg = "Location Permission Required!";
+                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
         }
 
     }
 
-    private void reset() {
-
-
-    }
-
     public void onChangeLocationBtnClick(View view) {
-
-
+        startActivity(new Intent(this, ChangeLocationActivity.class));
     }
 
 }
 
 /*
  *  Date Created  : 29th July 2K19, 02:18 PM..!!
- *  Last Modified : 7th October 2K19, 06:44 PM..!!
+ *  Last Modified : 7th October 2K19, 07:39 PM..!!
  *
  *  Change Log:
+ *
+ *  5th Commit - [City based API]
+ *  1. Using ChangeLocationActivity to make API request for particular City.
  *
  *  4th Commit - [Updated UI]
  *  1. Parsed Json Response from API into WeatherDataPOJO.
