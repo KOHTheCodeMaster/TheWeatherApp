@@ -236,7 +236,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
     }
 
     @Override
@@ -279,9 +278,14 @@ public class MainActivity extends AppCompatActivity {
 
 /*
  *  Date Created  : 29th July 2K19, 02:18 PM..!!
- *  Last Modified : 7th October 2K19, 08:21 PM..!!
+ *  Last Modified : 7th October 2K19, 08:45 PM..!!
  *
  *  Change Log:
+ *
+ *  7th Commit - [Launcher Icon & App Name]
+ *  1. Updated Launcher Icon.
+ *  2. Updated App Name --> Wizzy Weather.
+ *
  *
  *  6th Commit - [Last Known Location]
  *  1. Rather than Waiting for onLocationChanged, Last Known Location is used onResume.
