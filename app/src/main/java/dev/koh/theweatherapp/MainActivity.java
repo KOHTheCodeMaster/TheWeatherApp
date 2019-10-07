@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String API_APP_ID = "0600af5f009819e24fd8bf882383c839";
     private static final String WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather";
     private final int REQUEST_CODE = 567;
-    private static final int MIN_TIME = 100000;
-    private static final float MIN_DISTANCE = 1f;
+    private static final int MIN_TIME = (int) 1E6;
+    private static final float MIN_DISTANCE = 0;
 
     private LocationManager locationManager;
     private LocationListener locationListener;
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
         initializeViewElements();
 
-        fetchCurrentLocationWeather();
+        initializeLocationManagerAndListener();
 
         checkForPermissions();
 
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void fetchCurrentLocationWeather() {
+    private void initializeLocationManagerAndListener() {
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -125,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onProviderEnabled(String provider) {
                 Log.d(TAG, "onProviderEnabled: GPS has been Enabled.");
+                checkForPermissions();
             }
 
             @Override
@@ -133,6 +134,32 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+    }
+
+    private void checkForPermissions() {
+
+        String[] permissions = {
+                Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_FINE_LOCATION
+        };
+
+        if (ActivityCompat.checkSelfPermission(this, permissions[0])
+                != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, permissions[1])
+                        != PackageManager.PERMISSION_GRANTED) {
+
+            Log.d(TAG, "checkForPermissions: Requesting Permissions!");
+            ActivityCompat.requestPermissions(this, permissions, this.REQUEST_CODE);
+
+        } else {
+            //  Only When acquired the access to Permissions
+            //  Register the locationManager with GPS_PROVIDER, MIN_TIME MIN_DISTANCE
+            //  & locationListener
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    MIN_TIME, MIN_DISTANCE, locationListener);
+            Log.d(TAG, "checkForPermissions: locationManager Registered " +
+                    "for Location Updates Successfully!");
+        }
     }
 
     private void handleAPIRequest(RequestParams requestParams) {
@@ -188,32 +215,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void checkForPermissions() {
-
-        String[] permissions = {
-                Manifest.permission.INTERNET,
-                Manifest.permission.ACCESS_FINE_LOCATION
-        };
-
-        if (ActivityCompat.checkSelfPermission(this, permissions[0])
-                != PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(this, permissions[1])
-                        != PackageManager.PERMISSION_GRANTED) {
-
-            Log.d(TAG, "checkForPermissions: Requesting Permissions!");
-            ActivityCompat.requestPermissions(this, permissions, this.REQUEST_CODE);
-
-        } else {
-            //  Only When acquired the access to Permissions
-            //  Register the locationManager with GPS_PROVIDER, MIN_TIME MIN_DISTANCE
-            //  & locationListener
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    MIN_TIME, MIN_DISTANCE, locationListener);
-            Log.d(TAG, "checkForPermissions: locationManager Registered " +
-                    "for Location Updates Successfully!");
-        }
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -226,8 +227,15 @@ public class MainActivity extends AppCompatActivity {
 
         if (newCityName != null)
             fetchCityWeather(newCityName);
-        else
-            fetchCurrentLocationWeather();
+        else {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                checkForPermissions();
+            } else {
+                Location recentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                locationListener.onLocationChanged(recentLocation);
+            }
+        }
+
 
     }
 
@@ -271,9 +279,12 @@ public class MainActivity extends AppCompatActivity {
 
 /*
  *  Date Created  : 29th July 2K19, 02:18 PM..!!
- *  Last Modified : 7th October 2K19, 07:39 PM..!!
+ *  Last Modified : 7th October 2K19, 08:21 PM..!!
  *
  *  Change Log:
+ *
+ *  6th Commit - [Last Known Location]
+ *  1. Rather than Waiting for onLocationChanged, Last Known Location is used onResume.
  *
  *  5th Commit - [City based API]
  *  1. Using ChangeLocationActivity to make API request for particular City.

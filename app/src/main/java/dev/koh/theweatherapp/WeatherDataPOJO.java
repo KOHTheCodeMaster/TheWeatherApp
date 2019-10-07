@@ -1,7 +1,5 @@
 package dev.koh.theweatherapp;
 
-import android.util.Log;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,8 +28,8 @@ class WeatherDataPOJO {
             //  Round-off to nearest even Integer
             weatherDataPOJO.mTemperature = (int) Math.rint(tempCelsius) + "";
 
-            Log.d(TAG, "parseJsonToWeatherData: JsonObject Parsed into WeatherData successfully!" +
-                    "\nweatherDataPOJO : " + weatherDataPOJO);
+//            Log.d(TAG, "parseJsonToWeatherData: JsonObject Parsed into WeatherData successfully!" +
+//                    "\nweatherDataPOJO : " + weatherDataPOJO);
 
             return weatherDataPOJO;
 
